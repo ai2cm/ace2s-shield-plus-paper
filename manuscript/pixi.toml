@@ -1,0 +1,39 @@
+[workspace]
+authors = ["Spencer Clark <spencerc@allenai.org>"]
+channels = ["conda-forge"]
+name = "ace2s-shield-plus-paper"
+platforms = ["osx-arm64", "linux-64"]
+version = "0.1.0"
+
+[tasks]
+jupyterlab = "jupyter lab"
+
+[dependencies]
+python = "3.13.*"
+cartopy = "*"
+cftime = "*"
+dask = "*"
+distributed = "*"
+fsspec = "*"
+gcsfs = "*"
+h5netcdf = "*"
+jupyterlab = "*"
+matplotlib = "*"
+scipy = "*"
+seaborn = "*"
+universal_pathlib = "*"
+xarray = "*"
+wandb = "*"
+zarr = "*"
+ipykernel = ">=7.2.0,<8"
+ipywidgets = ">=8.1.8,<9"
+xhistogram = ">=0.3.2,<0.4"
+obstore = ">=0.8.2,<0.9"
+virtualizarr = ">=2.4.0,<3"
+kerchunk = ">=0.2.9,<0.3"
+nc-time-axis = ">=1.4.1,<2"
+metpy = ">=1.7.1,<2"
+
+[pypi-dependencies]
+beaker-py = "==1.32.2"
+faceted = "*"
