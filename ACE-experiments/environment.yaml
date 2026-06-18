@@ -1,0 +1,11 @@
+name: ace2s-shield-plus
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - gh
+  - pip
+  - pip:
+    - beaker-gantry==3.6.0
+    - fme @ git+https://github.com/ai2cm/ace@4ca6589b5189e82b89ea3c500862871a703d0ded
