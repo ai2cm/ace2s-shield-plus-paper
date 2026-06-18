@@ -1,0 +1,2 @@
+"ATM", "sst", "sea_surface_temperature", "INPUT/sst.nc", "bilinear", 1.0
+"ATM", "ci", "sea_ice_concentration", "INPUT/sea_ice.nc", "bilinear", 1.0
