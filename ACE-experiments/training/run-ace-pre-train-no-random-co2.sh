@@ -2,7 +2,7 @@
 
 set -e
 
-CONFIG_FILENAME="one-step-pre-train-config-full.yaml"
+CONFIG_FILENAME="one-step-pre-train-config-no-random-co2.yaml"
 BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
@@ -10,7 +10,7 @@ WANDB_USERNAME=spencerc_ai2
 WANDB_GROUP=ace-shield
 REPO_ROOT=$(git rev-parse --show-toplevel)
 N_GPUS=4
-STATS_DATASET=andrep/2026-02-06-vertically-resolved-1deg-c96-shield-ramped-climSST-random-CO2-ensemble-fme-dataset-stats
+STATS_DATASET=andrep/2026-02-06-vertically-resolved-1deg-fme-c96-shield-som-ensemble-dataset-ic_0001-stats
 
 cd $REPO_ROOT  # so config path is valid no matter where we are running this
 
@@ -18,7 +18,7 @@ CONFIG_B64=$(base64 < "$CONFIG_PATH" | tr -d '\n')
 
 for seed in 0 1
 do
-    job_name="ace-shield-one-step-pre-train-full-rs${seed}"
+    job_name="ace-shield-one-step-pre-train-no-random-co2-rs${seed}"
     override="seed=${seed}"
     python -m fme.ace.validate_config --config_type train $CONFIG_PATH --override $override
     gantry run \

@@ -2,14 +2,15 @@
 
 set -e
 
-CONFIG_FILENAME="multi-step-fine-tune-config-full.yaml"
+CONFIG_FILENAME="multi-step-fine-tune-config-no-random-co2.yaml"
+BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
 WANDB_USERNAME=spencerc_ai2
 WANDB_GROUP=ace-shield
 REPO_ROOT=$(git rev-parse --show-toplevel)
 N_GPUS=4
-STATS_DATASET=andrep/2026-02-06-vertically-resolved-1deg-c96-shield-ramped-climSST-random-CO2-ensemble-fme-dataset-stats
+STATS_DATASET=andrep/2026-02-06-vertically-resolved-1deg-fme-c96-shield-som-ensemble-dataset-ic_0001-stats
 PRE_TRAINED_WEIGHTS_PATH=/pre-trained-weights/training_checkpoints/best_ckpt.tar
 SEED_OFFSET=10
 
@@ -18,13 +19,13 @@ cd $REPO_ROOT  # so config path is valid no matter where we are running this
 CONFIG_B64=$(base64 < "$CONFIG_PATH" | tr -d '\n')
 
 declare -A PRE_TRAINED_WEIGHTS_DATASETS=( \
-    [0]="01KHCDS59F7RBJ1D42WD9HP3XC" \
-    [1]="01KHCEF1SBYCZCGDM78N1CJC3H" \
+    [0]="01KGVGBBDX595B15EZ7GRGNDDY" \
+    [1]="01KGVGCP345GVN96RCH9W6Y1Q2" \
 )
 
 for seed in 0 1
 do
-    job_name="ace-shield-multi-step-fine-tune-full-rs${seed}"
+    job_name="ace-shield-multi-step-fine-tune-no-random-co2-rs${seed}"
     # Offset seed for fine-tuning so that data shuffling is different than
     # during pre-training, but still follows the same path for a given set
     # random initialization weights.
@@ -36,7 +37,7 @@ do
         --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
         --name $job_name \
         --description 'Run ACE training' \
-        --beaker-image "$(cat $REPO_ROOT/latest_deps_only_image.txt)" \
+        --beaker-image "${BEAKER_IMAGE}" \
         --workspace ai2/climate-titan \
         --priority urgent \
         --preemptible \
@@ -60,7 +61,7 @@ done
 
 for seed in 0 1
 do
-    job_name="ace-shield-multi-step-fine-tune-energy-conserving-full-rs${seed}"
+    job_name="ace-shield-multi-step-fine-tune-energy-conserving-no-random-co2-rs${seed}"
     # Offset seed for fine-tuning so that data shuffling is different than
     # during pre-training, but still follows the same path for a given set
     # random initialization weights.
@@ -77,7 +78,7 @@ do
         --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
         --name $job_name \
         --description 'Run ACE training' \
-        --beaker-image "$(cat $REPO_ROOT/latest_deps_only_image.txt)" \
+        --beaker-image "${BEAKER_IMAGE}" \
         --workspace ai2/climate-titan \
         --priority high \
         --preemptible \
