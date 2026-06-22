@@ -3,6 +3,7 @@
 set -e
 
 CONFIG_FILENAME="multi-step-fine-tune-config-no-random-co2.yaml"
+BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
 WANDB_USERNAME=spencerc_ai2
@@ -36,7 +37,7 @@ do
         --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
         --name $job_name \
         --description 'Run ACE training' \
-        --beaker-image "$(cat $REPO_ROOT/latest_deps_only_image.txt)" \
+        --beaker-image "${BEAKER_IMAGE}" \
         --workspace ai2/climate-titan \
         --priority urgent \
         --preemptible \
@@ -77,7 +78,7 @@ do
         --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
         --name $job_name \
         --description 'Run ACE training' \
-        --beaker-image "$(cat $REPO_ROOT/latest_deps_only_image.txt)" \
+        --beaker-image "${BEAKER_IMAGE}" \
         --workspace ai2/climate-titan \
         --priority high \
         --preemptible \
