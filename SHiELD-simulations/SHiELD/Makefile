@@ -12,7 +12,7 @@ SCRIPTS_DIR=$(shell pwd)/scripts
 ENVIRONMENT_FILE=$(SOFTWARE_DIR)/environment.yaml
 PIP_REQUIREMENTS=$(SOFTWARE_DIR)/requirements.txt
 CONDA_RUN=$(SOFTWARE_DIR)/conda_run.sh
-EXECUTABLE=$(SOFTWARE_DIR)/submodules/SHiELD_build/Build/bin/SHiELD_nh.repro.64bit.intel.x
+EXECUTABLE=$(SOFTWARE_DIR)/external/SHiELD_build/Build/bin/SHiELD_nh.repro.64bit.intel.x
 
 # A Python package for running SHiELD simulations via fv3config and SLURM
 SHIELD_RUN_DIR=$(SOFTWARE_DIR)/shield_run
@@ -34,10 +34,9 @@ IC_DATE_1xCO2_C96_ic_0003_RANDOM := 2034092100
 IC_DATE_2xCO2_C96_ic_0003_RANDOM := 2034092200
 IC_DATE_4xCO2_C96_ic_0003_RANDOM := 2034092300
 
-update_submodules:
-	git submodule update --init --recursive
 
 build_shield:
+	bash checkout.sh
 	bash $(SOFTWARE_DIR)/build_SHiELD.sh
 
 create_environment:

@@ -14,7 +14,8 @@ for which this software is required.
 
 To install the necessary software, just a couple make commands are needed.
 First we run `make build_shield` to compile SHiELD using GFDL's `SHiELD_build`
-system. This automatically checks out any submodules as needed:
+system. This runs a script to checkout the relevant code and runs a script to
+compile the model:
 
 ```
 $ make build_shield
