@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -e
+
+ROOT=$(realpath "$(dirname "$0")")
+EXTERNAL_DIR=${ROOT}/software/external
+SHIELD_SRC_DIR=${EXTERNAL_DIR}/SHiELD_SRC
+
+SHiELD_BUILD_REPOSITORY=https://github.com/ai2cm/SHiELD_build.git
+FMS_REPOSITORY=https://github.com/NOAA-GFDL/FMS.git
+FMSCOUPLER_REPOSITORY=https://github.com/NOAA-GFDL/FMScoupler.git
+GFDL_ATMOS_CUBED_SPHERE_REPOSITORY=https://github.com/NOAA-GFDL/GFDL_atmos_cubed_sphere.git
+SHiELD_PHYSICS_REPOSITORY=https://github.com/ai2cm/SHiELD_physics.git
+ATMOS_DRIVERS_REPOSITORY=https://github.com/NOAA-GFDL/atmos_drivers.git
+
+SHiELD_BUILD_COMMIT=7524f884b7b0ee2e23c4770bf542c8b52d145efa
+FMS_COMMIT=7d8aa2102316e2bd5df25a7e7b14aee42c8f060f
+FMSCOUPLER_COMMIT=2a51893473d84a106e95da33e0f05225ca49a3db
+GFDL_ATMOS_CUBED_SPHERE_COMMIT=adb3417b37c93d23daf6679dac7288dd628a8d74
+SHiELD_PHYSICS_COMMIT=8d5874140822402901f3d11a1099a229bd9a2390
+ATMOS_DRIVERS_COMMIT=b40defaa151f3182438a6433ee4762085d81588e
+
+git clone ${SHiELD_BUILD_REPOSITORY} ${EXTERNAL_DIR}/SHiELD_build
+cd ${EXTERNAL_DIR}/SHiELD_build
+git checkout ${SHiELD_BUILD_COMMIT}
+git submodule update --init mkmf
+
+git clone ${FMS_REPOSITORY} ${SHIELD_SRC_DIR}/FMS
+cd ${SHIELD_SRC_DIR}/FMS
+git checkout ${FMS_COMMIT}
+
+git clone ${FMSCOUPLER_REPOSITORY} ${SHIELD_SRC_DIR}/FMScoupler
+cd ${SHIELD_SRC_DIR}/FMScoupler
+git checkout ${FMSCOUPLER_COMMIT}
+
+git clone ${GFDL_ATMOS_CUBED_SPHERE_REPOSITORY} ${SHIELD_SRC_DIR}/GFDL_atmos_cubed_sphere
+cd ${SHIELD_SRC_DIR}/GFDL_atmos_cubed_sphere
+git checkout ${GFDL_ATMOS_CUBED_SPHERE_COMMIT}
+
+git clone ${SHiELD_PHYSICS_REPOSITORY} ${SHIELD_SRC_DIR}/SHiELD_physics
+cd ${SHIELD_SRC_DIR}/SHiELD_physics
+git checkout ${SHiELD_PHYSICS_COMMIT}
+
+git clone ${ATMOS_DRIVERS_REPOSITORY} ${SHIELD_SRC_DIR}/atmos_drivers
+cd ${SHIELD_SRC_DIR}/atmos_drivers
+git checkout ${ATMOS_DRIVERS_COMMIT}
