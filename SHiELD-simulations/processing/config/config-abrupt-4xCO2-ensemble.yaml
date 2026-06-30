@@ -1,0 +1,111 @@
+config_name: 2025-02-04-SHiELD-SOM-C96-simulations
+
+# Directories for storing output
+# output_directory is for storing final products
+# working_directory is for storing any temporary intermediates
+# gcs_bucket is the root directory for any data uploaded to Google Cloud Storage
+archive_directory: /archive/Spencer.Clark/2025-02-04-C96-SHiELD-SOM
+output_directory: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-C96-SHiELD-SOM-post-processing
+working_directory: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-C96-SHiELD-SOM-post-processing/work
+gcs_bucket: gs://vcm-ml-raw-flexible-retention/2025-02-03-C96-SHiELD-SOM-abrupt-4xCO2-ensemble
+
+# runs: a mapping from run names (for use in wildcards) to paths to run
+# directories.
+runs:
+  abrupt-4xCO2-ic_0001: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0001
+  abrupt-4xCO2-ic_0002: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0002
+  abrupt-4xCO2-ic_0003: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0003
+  abrupt-4xCO2-ic_0004: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0004
+  abrupt-4xCO2-ic_0005: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0005
+  abrupt-4xCO2-ic_0006: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0006
+  abrupt-4xCO2-ic_0007: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0007
+  abrupt-4xCO2-ic_0008: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0008
+  abrupt-4xCO2-ic_0009: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0009
+  abrupt-4xCO2-ic_0010: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0010
+  abrupt-4xCO2-ic_0011: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0011
+  abrupt-4xCO2-ic_0012: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0012
+  abrupt-4xCO2-ic_0013: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0013
+  abrupt-4xCO2-ic_0014: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0014
+  abrupt-4xCO2-ic_0015: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0015
+  abrupt-4xCO2-ic_0016: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0016
+  abrupt-4xCO2-ic_0017: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0017
+  abrupt-4xCO2-ic_0018: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0018
+  abrupt-4xCO2-ic_0019: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0019
+  abrupt-4xCO2-ic_0020: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0020
+  abrupt-4xCO2-ic_0021: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0021
+  abrupt-4xCO2-ic_0022: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0022
+  abrupt-4xCO2-ic_0023: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0023
+  abrupt-4xCO2-ic_0024: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0024
+  abrupt-4xCO2-ic_0025: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0025
+  abrupt-4xCO2-ic_0026: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0026
+  abrupt-4xCO2-ic_0027: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0027
+  abrupt-4xCO2-ic_0028: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0028
+  abrupt-4xCO2-ic_0029: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0029
+  abrupt-4xCO2-ic_0030: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0030
+  abrupt-4xCO2-ic_0031: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0031
+  abrupt-4xCO2-ic_0032: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0032
+  abrupt-4xCO2-ic_0033: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0033
+  abrupt-4xCO2-ic_0034: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0034
+  abrupt-4xCO2-ic_0035: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0035
+  abrupt-4xCO2-ic_0036: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs/slab-ocean-abrupt-4xCO2-C96-ic_0036
+
+# cubed_sphere_grid_data: a mapping from resolutions to paths to mosaic files
+# for cubed sphere grids.
+cubed_sphere_grid_data:
+  C24: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2024-06-19-vcm-fv3config/data/grid_data/v1.2/C24/C24_mosaic.nc
+  C48: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2024-06-19-vcm-fv3config/data/grid_data/v1.2/C48/C48_mosaic.nc
+  C96: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2024-06-19-vcm-fv3config/data/grid_data/v1.2/C96/C96_mosaic.nc
+
+# target_grid_data: a mapping from target grid names (for use in wildcards) to
+# paths to mosaic files for output grids.
+target_grid_data:
+  gaussian_grid_180_by_360:
+    mosaic: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2024-01-29-gaussian-grid-mosaics/gaussian_grid_180_by_360/gaussian_grid_180_by_360_mosaic.nc
+    chunks:
+      scalar:
+        time: -1
+      2D:
+        time: 160
+      3D:
+        time: 16
+        pfull: 10
+  gaussian_grid_45_by_90:
+    mosaic: /gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2024-01-29-gaussian-grid-mosaics/gaussian_grid_45_by_90/gaussian_grid_45_by_90_mosaic.nc
+    chunks:
+      scalar:
+        time: -1
+      2D:
+        time: 2560
+      3D:
+        time: 256
+        pfull: 10
+
+# Number of ranks to partition combine jobs over
+xpartition_ranks: 5
+
+# Chunk sizes for opening the netCDF files initially
+initial_chunks:
+  time: 16
+
+# Configure the spherical harmonic transformation roundtrip
+spherical_harmonic_transform_filter:
+  filter_data: True
+  unfiltered_variables:
+  - land_sea_mask
+  - ocean_fraction
+  - land_fraction
+  - sea_ice_fraction
+  - column_soil_moisture
+  - soil_moisture_0
+  - soil_moisture_1
+  - soil_moisture_2
+  - soil_moisture_3
+  - soil_temperature_0
+  - soil_temperature_1
+  - soil_temperature_2
+  - soil_temperature_3
+  - snow_depth
+  - water_equivalent_snow_depth
+  - snow_cover_fraction
+  - sea_ice_concentration
+  - sea_ice_thickness
