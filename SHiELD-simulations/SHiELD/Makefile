@@ -1,7 +1,9 @@
 # Variables one might modify
-SCRATCH_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-07-23-reference-SHiELD-runs
+RANDOM_CO2_SCRATCH_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-07-23-reference-SHiELD-runs
+ABRUPT_4xCO2_SCRATCH_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs
+AMIP_CONSTANT_CO2_SCRATCH_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-12-10-reference-SHiELD-runs
 SPIN_UP_REPEATING_SST_RUN=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2024-06-19-reference-SHiELD-runs/repeating-sst-bridge-C96
-INITIAL_CONDITIONS_ROOT=$(SCRATCH_ROOT)/initial-conditions
+
 GRID_DATA_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2024-06-19-vcm-fv3config/data/grid_data/v1.2
 ENVIRONMENT_NAME=2025-07-16-SHiELD-simulations
 CONFIG_DIR=$(shell pwd)/config
@@ -18,7 +20,8 @@ EXECUTABLE=$(SOFTWARE_DIR)/external/SHiELD_build/Build/bin/SHiELD_nh.repro.64bit
 SHIELD_RUN_DIR=$(SOFTWARE_DIR)/shield_run
 SHIELD_RUN_TESTS=$(SHIELD_RUN_DIR)/shield_run/tests
 
-CO2_CONCENTRATIONS=1xCO2 2xCO2 4xCO2
+CENTRAL_CO2_CONCENTRATIONS=1xCO2 2xCO2 4xCO2
+RANDOM_CO2_INITIAL_CONDITIONS_ROOT=$(RANDOM_CO2_SCRATCH_ROOT)/initial-conditions
 
 # Key-value pairs to infer initial condition date from initial condition name
 # https://stackoverflow.com/questions/62005888/key-value-pair-in-makefile
@@ -34,6 +37,8 @@ IC_DATE_1xCO2_C96_ic_0003_RANDOM := 2034092100
 IC_DATE_2xCO2_C96_ic_0003_RANDOM := 2034092200
 IC_DATE_4xCO2_C96_ic_0003_RANDOM := 2034092300
 
+ABRUPT_4xCO2_INITIAL_CONDITIONS_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2025-02-03-abrupt-4xCO2-ensemble-initial-conditions/1xCO2-initial-conditions
+ABRUPT_4xCO2_INIITIAL_CONDITIONS := $(shell seq -f "ic_%04g" 1 36)
 
 build_shield:
 	bash checkout.sh
@@ -60,10 +65,10 @@ test_shield_run:
 # https://github.com/ai2cm/ace2-som-paper/blob/main/SHiELD-simulations/SHiELD
 # for the configuration information for the simulation that produced these
 # initial conditions.
-prepare_initial_conditions_C96:
+prepare_random_co2_initial_conditions_c96:
 	$(SCRIPTS_DIR)/prepare_restart_files.sh \
 		$(SPIN_UP_REPEATING_SST_RUN)/restart/2034100100 \
-		$(INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96 \
+		$(RANDOM_CO2_INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96 \
 		2034091800 \
 		2034091900 \
 		2034092000 \
@@ -74,38 +79,65 @@ prepare_initial_conditions_C96:
 		2034092500 \
 		2034092600
 
-submit_climatological_ramped_sst_random_co2_C96: $(addprefix submit_climatological_ramped_sst_random_co2_C96_, $(CO2_CONCENTRATIONS))
+submit_climatological_ramped_sst_random_co2_C96: $(addprefix submit_climatological_ramped_sst_random_co2_C96_, $(CENTRAL_CO2_CONCENTRATIONS))
 submit_climatological_ramped_sst_random_co2_C96_%:
 	$(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
 		$(EXECUTABLE) \
 		$(CONFIG_DIR)/climatological-ramped-sst-$*-C96-random-co2.yaml \
 		63 \
 		00:42:00 \
-		$(SCRATCH_ROOT)/climatological-ramped-sst-$*-C96-random-co2 \
-		--initial-conditions=$(INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96/$(IC_DATE_$*_C96_RANDOM) \
+		$(RANDOM_CO2_SCRATCH_ROOT)/climatological-ramped-sst-$*-C96-random-co2 \
+		--initial-conditions=$(RANDOM_CO2_INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96/$(IC_DATE_$*_C96_RANDOM) \
 		--grid-data-root=$(GRID_DATA_ROOT)
 
-submit_climatological_ramped_sst_random_co2_ic_0002_C96: $(addprefix submit_climatological_ramped_sst_random_co2_ic_0002_C96_, $(CO2_CONCENTRATIONS))
+submit_climatological_ramped_sst_random_co2_ic_0002_C96: $(addprefix submit_climatological_ramped_sst_random_co2_ic_0002_C96_, $(CENTRAL_CO2_CONCENTRATIONS))
 submit_climatological_ramped_sst_random_co2_ic_0002_C96_%:
 	$(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
 		$(EXECUTABLE) \
 		$(CONFIG_DIR)/climatological-ramped-sst-$*-C96-random-co2-ic2.yaml \
 		63 \
 		00:42:00 \
-		$(SCRATCH_ROOT)/climatological-ramped-sst-$*-C96-random-co2-ic_0002 \
-		--initial-conditions=$(INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96/$(IC_DATE_$*_C96_ic_0002_RANDOM) \
+		$(RANDOM_CO2_SCRATCH_ROOT)/climatological-ramped-sst-$*-C96-random-co2-ic_0002 \
+		--initial-conditions=$(RANDOM_CO2_INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96/$(IC_DATE_$*_C96_ic_0002_RANDOM) \
 		--grid-data-root=$(GRID_DATA_ROOT)
 
-submit_climatological_ramped_sst_random_co2_ic_0003_C96: $(addprefix submit_climatological_ramped_sst_random_co2_ic_0003_C96_, $(CO2_CONCENTRATIONS))
+submit_climatological_ramped_sst_random_co2_ic_0003_C96: $(addprefix submit_climatological_ramped_sst_random_co2_ic_0003_C96_, $(CENTRAL_CO2_CONCENTRATIONS))
 submit_climatological_ramped_sst_random_co2_ic_0003_C96_%:
 	$(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
 		$(EXECUTABLE) \
 		$(CONFIG_DIR)/climatological-ramped-sst-$*-C96-random-co2-ic3.yaml \
 		63 \
 		00:42:00 \
-		$(SCRATCH_ROOT)/climatological-ramped-sst-$*-C96-random-co2-ic_0003 \
-		--initial-conditions=$(INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96/$(IC_DATE_$*_C96_ic_0003_RANDOM) \
+		$(RANDOM_CO2_SCRATCH_ROOT)/climatological-ramped-sst-$*-C96-random-co2-ic_0003 \
+		--initial-conditions=$(RANDOM_CO2_INITIAL_CONDITIONS_ROOT)/repeating-sst-bridge-C96/$(IC_DATE_$*_C96_ic_0003_RANDOM) \
 		--grid-data-root=$(GRID_DATA_ROOT)
+
+submit_slab_ocean_abrupt_4xCO2_ensemble_C96: $(addprefix submit_slab_ocean_abrupt_4xCO2_ensemble_C96_, $(ABRUPT_4xCO2_INITIAL_CONDITIONS))
+submit_slab_ocean_abrupt_4xCO2_ensemble_C96_%:
+        $(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
+                        $(EXECUTABLE) \
+                        $(CONFIG_DIR)/slab-ocean-abrupt-4xCO2-C96.yaml \
+                        3 \
+                        00:42:00 \
+                        $(ABRUPT_4xCO2_SCRATCH_ROOT)/slab-ocean-abrupt-4xCO2-C96-$* \
+                        --initial-conditions=$(ABRUPT_4xCO2_INITIAL_CONDITIONS_ROOT)/$* \
+                        --grid-data-root=$(GRID_DATA_ROOT)
+
+submit_AMIP_constant_CO2_simulation:
+        $(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
+                $(EXECUTABLE) \
+                $(CONFIG_DIR)/AMIP-production-C96-constant-CO2.yaml \
+                172 \
+                03:00:00 \
+                $(AMIP_CONSTANT_CO2_SCRATCH_ROOT)/AMIP-constant-CO2
+
+submit_AMIP_constant_CO2_simulation_final_segment:
+        $(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
+                $(EXECUTABLE) \
+                $(CONFIG_DIR)/AMIP-production-C96-constant-CO2-final-segment.yaml \
+                1 \
+                03:00:00 \
+                $(AMIP_CONSTANT_CO2_SCRATCH_ROOT)/AMIP-constant-CO2-final-segment
 
 # Rules below are for integration testing
 submit_simulation_6_hour:
