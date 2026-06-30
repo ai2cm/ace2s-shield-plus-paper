@@ -1,6 +1,7 @@
 # Variables one might modify
 RANDOM_CO2_SCRATCH_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-07-23-reference-SHiELD-runs
 ABRUPT_4xCO2_SCRATCH_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-02-04-reference-SHiELD-runs
+AMIP_CONSTANT_CO2_SCRATCH_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2025-12-10-reference-SHiELD-runs
 SPIN_UP_REPEATING_SST_RUN=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/scratch/2024-06-19-reference-SHiELD-runs/repeating-sst-bridge-C96
 
 GRID_DATA_ROOT=/gpfs/f5/gfdl_w/scratch/Spencer.Clark/reference/2024-06-19-vcm-fv3config/data/grid_data/v1.2
@@ -121,6 +122,22 @@ submit_slab_ocean_abrupt_4xCO2_ensemble_C96_%:
                         $(ABRUPT_4xCO2_SCRATCH_ROOT)/slab-ocean-abrupt-4xCO2-C96-$* \
                         --initial-conditions=$(ABRUPT_4xCO2_INITIAL_CONDITIONS_ROOT)/$* \
                         --grid-data-root=$(GRID_DATA_ROOT)
+
+submit_AMIP_constant_CO2_simulation:
+        $(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
+                $(EXECUTABLE) \
+                $(CONFIG_DIR)/AMIP-production-C96-constant-CO2.yaml \
+                172 \
+                03:00:00 \
+                $(AMIP_CONSTANT_CO2_SCRATCH_ROOT)/AMIP-constant-CO2
+
+submit_AMIP_constant_CO2_simulation_final_segment:
+        $(CONDA_RUN) $(ENVIRONMENT_NAME) python -m shield_run.submit \
+                $(EXECUTABLE) \
+                $(CONFIG_DIR)/AMIP-production-C96-constant-CO2-final-segment.yaml \
+                1 \
+                03:00:00 \
+                $(AMIP_CONSTANT_CO2_SCRATCH_ROOT)/AMIP-constant-CO2-final-segment
 
 # Rules below are for integration testing
 submit_simulation_6_hour:
