@@ -8,7 +8,7 @@ SHIELD_SRC_DIR=${EXTERNAL_DIR}/SHiELD_SRC
 
 SHiELD_BUILD_REPOSITORY=https://github.com/ai2cm/SHiELD_build.git
 FMS_REPOSITORY=https://github.com/NOAA-GFDL/FMS.git
-FMSCOUPLER_REPOSITORY=https://github.com/NOAA-GFDL/FMScoupler.git
+FMSCOUPLER_REPOSITORY=https://github.com/NOAA-GFDL/FMSCoupler.git
 GFDL_ATMOS_CUBED_SPHERE_REPOSITORY=https://github.com/NOAA-GFDL/GFDL_atmos_cubed_sphere.git
 SHiELD_PHYSICS_REPOSITORY=https://github.com/ai2cm/SHiELD_physics.git
 ATMOS_DRIVERS_REPOSITORY=https://github.com/NOAA-GFDL/atmos_drivers.git
@@ -29,8 +29,8 @@ git clone ${FMS_REPOSITORY} ${SHIELD_SRC_DIR}/FMS
 cd ${SHIELD_SRC_DIR}/FMS
 git checkout ${FMS_COMMIT}
 
-git clone ${FMSCOUPLER_REPOSITORY} ${SHIELD_SRC_DIR}/FMScoupler
-cd ${SHIELD_SRC_DIR}/FMScoupler
+git clone ${FMSCOUPLER_REPOSITORY} ${SHIELD_SRC_DIR}/FMSCoupler
+cd ${SHIELD_SRC_DIR}/FMSCoupler
 git checkout ${FMSCOUPLER_COMMIT}
 
 git clone ${GFDL_ATMOS_CUBED_SPHERE_REPOSITORY} ${SHIELD_SRC_DIR}/GFDL_atmos_cubed_sphere
