@@ -108,3 +108,17 @@ def get_aspect_ratio(projection, extent):
     _, y1t = projection.transform_point(x1, y1, src_crs=ccrs.PlateCarree())
 
     return (y1t - y0t) / (x1t - x0t)
+
+
+def get_central_position_between_axes(axes, axis):
+    """Useful for placing figure legends centered beside or under figure panels."""
+    if axis == "x":
+        x0_left = min(ax.get_position().x0 for ax in axes)
+        x1_right = max(ax.get_position().x1 for ax in axes)
+        return (x0_left + x1_right) / 2.0
+    elif axis == "y":
+        y0_bottom = min(ax.get_position().y0 for ax in axes)
+        y1_top = max(ax.get_position().y1 for ax in axes)
+        return (y0_bottom + y1_top) / 2.0
+    else:
+        raise ValueError(f"Unrecognized axis: {axis!r}.")

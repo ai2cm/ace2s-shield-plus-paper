@@ -413,7 +413,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
       - pypi: https://files.pythonhosted.org/packages/ea/5f/59c0006cfce8202bfc8bc0f0669d8c005ea6d31aa8652000ad4853d3f7e1/beaker_py-1.32.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e3/26/57c6fb270950d476074c087527a558ccb6f4436657314bfb6cdf484114c4/docker-7.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/87/18/f5eaae0818f68eccd6d19acf6dc2de08cb1d0b3d62e8cc29d4b5f3d3681e/faceted-0.2.1-py2.py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/72/40/0e330fd3e591c6a4cc2b1e44bb5af52e51e7f2e9ee4dbfe52244e4b9aa77/faceted-2026.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
@@ -757,7 +757,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: https://files.pythonhosted.org/packages/ea/5f/59c0006cfce8202bfc8bc0f0669d8c005ea6d31aa8652000ad4853d3f7e1/beaker_py-1.32.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e3/26/57c6fb270950d476074c087527a558ccb6f4436657314bfb6cdf484114c4/docker-7.1.0-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/87/18/f5eaae0818f68eccd6d19acf6dc2de08cb1d0b3d62e8cc29d4b5f3d3681e/faceted-0.2.1-py2.py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/72/40/0e330fd3e591c6a4cc2b1e44bb5af52e51e7f2e9ee4dbfe52244e4b9aa77/faceted-2026.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
@@ -2362,13 +2362,30 @@ packages:
   - pkg:pypi/executing?source=hash-mapping
   size: 30753
   timestamp: 1756729456476
-- pypi: https://files.pythonhosted.org/packages/87/18/f5eaae0818f68eccd6d19acf6dc2de08cb1d0b3d62e8cc29d4b5f3d3681e/faceted-0.2.1-py2.py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/72/40/0e330fd3e591c6a4cc2b1e44bb5af52e51e7f2e9ee4dbfe52244e4b9aa77/faceted-2026.7.0-py3-none-any.whl
   name: faceted
-  version: 0.2.1
-  sha256: bd6c845f97f61428e08adbabc291c76d0a3cf34c3709690b5bff8cde7290f573
+  version: 2026.7.0
+  sha256: 1369b1ab3bf1d20dc8e7a85ede8bdb28971b2e9ef8f3c8e283f395f69a4076ed
   requires_dist:
   - matplotlib>=1.5
   - numpy>=1.7
+  - cartopy ; extra == 'dev'
+  - coveralls ; extra == 'dev'
+  - pytest ; extra == 'dev'
+  - pytest-cov ; extra == 'dev'
+  - cartopy ; extra == 'docs'
+  - cftime ; extra == 'docs'
+  - ipython ; extra == 'docs'
+  - jupyter ; extra == 'docs'
+  - nc-time-axis ; extra == 'docs'
+  - netcdf4 ; extra == 'docs'
+  - numpydoc ; extra == 'docs'
+  - pooch ; extra == 'docs'
+  - sphinx ; extra == 'docs'
+  - sphinx-gallery ; extra == 'docs'
+  - sphinx-rtd-theme ; extra == 'docs'
+  - xarray ; extra == 'docs'
+  requires_python: '>=3.11'
 - conda: https://conda.anaconda.org/conda-forge/noarch/flexcache-0.3-pyhd8ed1ab_1.conda
   sha256: acdb7b73d84268773fcc8192965994554411edc488ec3447925a62154e9d3baa
   md5: f1e618f2f783427019071b14a111b30d
