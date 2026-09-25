@@ -2,10 +2,13 @@
 
 set -e
 
+DATE=2026-09-09
 CONFIG_FILENAME="ace-abrupt-4xCO2-ensemble-evaluator-config.yaml"
-BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
+SET_SEED=$SCRIPT_PATH/set_seed.py
 WANDB_USERNAME=spencerc_ai2
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
@@ -25,21 +28,24 @@ declare -A MODELS=( \
     [full-rs1]="01KHJ5EQ04XTFG46QCKX3TTAHF" \
     [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
     [full-energy-conserving-rs1]="01KHCXABVNA3TJW0ZT5F4YDDQT" \
+    [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
+    [baseline-like-full-rs1]="01M235Y7DSCW4TPKTX7S305QYD" \
 )
 
 for name in "${!MODELS[@]}"; do
     python -m fme.ace.validate_config --config_type evaluator $CONFIG_PATH
-    job_name="${name}-abrupt-4xCO2-ensemble-evaluator"
+    job_name="${DATE}-${name}-abrupt-4xCO2-ensemble-evaluator"
+    seed=$(python $SET_SEED $job_name)
+    override="seed=$seed"
     existing_results_dataset=${MODELS[$name]}
     gantry run \
         --remote https://github.com/ai2cm/ace \
-        --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+        --ref $ACE_COMMIT \
         --name $job_name \
         --description 'Run ACE abrupt 4xCO2 ensemble evaluator' \
         --beaker-image "${BEAKER_IMAGE}" \
-        --workspace ai2/climate-titan \
-        --priority urgent \
-        --preemptible \
+        --workspace ai2/ace \
+        --priority high \
         --cluster ai2/titan \
         --env WANDB_USERNAME=$WANDB_USERNAME \
         --env WANDB_NAME=$job_name \
@@ -51,12 +57,13 @@ for name in "${!MODELS[@]}"; do
         --dataset $existing_results_dataset:$CHECKPOINT_PATH:/ckpt.tar \
         --gpus 1 \
         --shared-memory 20GiB \
+        --min-runtime 30min \
         --weka climate-default:/climate-default \
         --system-python \
         --install "pip install --no-deps ." \
         -- bash -c "\
             echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml \
             && \
-            python -I -m fme.ace.evaluator /tmp/config.yaml \
+            python -I -m fme.ace.evaluator /tmp/config.yaml --override $override \
         "
 done

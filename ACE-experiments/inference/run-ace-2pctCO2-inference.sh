@@ -2,11 +2,14 @@
 
 set -e
 
+DATE=2026-09-09
 WANDB_USERNAME=spencerc_ai2
 CONFIG_FILENAME="ace-som-2pctCO2-inference-config.yaml"
-BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
+SET_SEED=$SCRIPT_PATH/set_seed.py
 
 SPIN_UP_FORCING_ROOT=/climate-default/2024-08-15-vertically-resolved-1deg-c96-shield-som-ensemble-spin-up-fme-dataset/netcdfs/concatenated-1xCO2-ic_0005
 MAIN_FORCING_ROOT=/climate-default/2026-01-28-vertically-resolved-1deg-c96-shield-som-increasing-co2-fme-dataset
@@ -37,7 +40,8 @@ MAIN_N_FORWARD_STEPS=102267
 MAIN_EXPERIMENT_DIR="/results/main"
 
 for model in "${!MODELS[@]}"; do
-    job_name=$model-2pctCO2-inference
+    job_name=$DATE-$model-2pctCO2-inference
+    seed=$(python $SET_SEED $job_name)
     dataset_id="${MODELS[$model]}"
 
     spin_up_initial_condition_path=$SPIN_UP_FORCING_ROOT/2030010100.nc
@@ -50,6 +54,7 @@ for model in "${!MODELS[@]}"; do
         n_forward_steps=$SPIN_UP_N_FORWARD_STEPS \
         logging.log_to_wandb=$spin_up_log_to_wandb \
         data_writer.files=[] \
+        seed=$seed \
     "
     main_overrides="\
         experiment_dir=$MAIN_EXPERIMENT_DIR \
@@ -59,19 +64,19 @@ for model in "${!MODELS[@]}"; do
         initial_condition.path=$MAIN_INITIAL_CONDITION_PATH \
         initial_condition.start_indices=null \
         n_forward_steps=$MAIN_N_FORWARD_STEPS \
+        seed=$seed \
     "
 
     python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $spin_up_overrides
     python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $main_overrides
     gantry run \
         --remote https://github.com/ai2cm/ace \
-        --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+        --ref $ACE_COMMIT \
         --name $job_name \
         --description 'Run inference with ACE' \
         --beaker-image "${BEAKER_IMAGE}" \
-        --workspace ai2/climate-titan \
-        --priority urgent \
-        --preemptible \
+        --workspace ai2/ace \
+        --priority high \
         --cluster ai2/titan \
         --env WANDB_USERNAME=$WANDB_USERNAME \
         --env WANDB_NAME=$job_name \
@@ -83,6 +88,7 @@ for model in "${!MODELS[@]}"; do
         --dataset $dataset_id:training_checkpoints/best_inference_ckpt.tar:/ckpt.tar \
         --gpus 1 \
         --shared-memory 20GiB \
+        --min-runtime 8h \
         --weka climate-default:/climate-default \
         --system-python \
         --install "pip install --no-deps ." \

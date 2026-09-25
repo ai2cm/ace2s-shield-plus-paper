@@ -2,11 +2,14 @@
 
 set -e
 
+DATE=2026-09-09
 WANDB_USERNAME=spencerc_ai2
 CONFIG_FILENAME="ace-som-inference-config.yaml"
-BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
+SET_SEED=$SCRIPT_PATH/set_seed.py
 
 SPIN_UP_FORCING_ROOT=/climate-default/2024-08-15-vertically-resolved-1deg-c96-shield-som-ensemble-spin-up-fme-dataset/netcdfs
 MAIN_FORCING_ROOT=/climate-default/2026-01-28-vertically-resolved-1deg-c96-shield-som-ensemble-fme-dataset
@@ -49,6 +52,8 @@ declare -A MODELS=( \
     [full-rs1]="01KHJ5EQ04XTFG46QCKX3TTAHF" \
     [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
     [full-energy-conserving-rs1]="01KHCXABVNA3TJW0ZT5F4YDDQT" \
+    [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
+    [baseline-like-full-rs1]="01M235Y7DSCW4TPKTX7S305QYD" \
 )
 
 declare -A OUTPUT_DAILY_PRECIPITATION=( \
@@ -61,6 +66,8 @@ declare -A OUTPUT_DAILY_PRECIPITATION=( \
     [full-rs1]="False" \
     [full-energy-conserving-rs0]="True" \
     [full-energy-conserving-rs1]="True" \
+    [baseline-like-full-rs0]="True" \
+    [baseline-like-full-rs1]="False" \
 )
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -68,7 +75,7 @@ cd $REPO_ROOT  # so config path is valid no matter where we are running this scr
 
 CONFIG_B64=$(base64 < "$CONFIG_PATH" | tr -d '\n')
 
-GCS_ROOT="gs://vcm-ml-experiments/spencerc/2026-04-25-ace-equilibrium-climate-inference"
+GCS_ROOT="gs://vcm-ml-experiments/spencerc/${DATE}-ace-equilibrium-climate-inference"
 SPIN_UP_MAXIMUM_N_FORWARD_STEPS=1460
 SPIN_UP_EXPERIMENT_DIR="/results/spin-up"
 
@@ -89,7 +96,8 @@ for model in "${!MODELS[@]}"; do
             spin_up_n_forward_steps="$((SPIN_UP_MAXIMUM_N_FORWARD_STEPS - initial_condition + 1))"
             spin_up_log_to_wandb=false  # Disable logging to wandb in spin up case.
 
-            job_name=$model-$climate-ic$initial_condition
+            job_name=$DATE-$model-$climate-ic$initial_condition
+            seed=$(python $SET_SEED $job_name)
             spin_up_overrides="\
                 experiment_dir=$SPIN_UP_EXPERIMENT_DIR \
                 forcing_loader.dataset.data_path=$spin_up_forcing_path \
@@ -98,6 +106,7 @@ for model in "${!MODELS[@]}"; do
                 n_forward_steps=$spin_up_n_forward_steps \
                 logging.log_to_wandb=$spin_up_log_to_wandb \
                 data_writer.files=[] \
+                seed=$seed \
             "
 
             main_experiment_dir="$GCS_ROOT/$model-$climate-ic$initial_condition/main"
@@ -110,6 +119,7 @@ for model in "${!MODELS[@]}"; do
                     initial_condition.path=$MAIN_INITIAL_CONDITION_PATH \
                     initial_condition.start_indices.times=[$MAIN_INITIAL_CONDITION_TIME] \
                     n_forward_steps=$MAIN_N_FORWARD_STEPS \
+                    seed=$seed \
                 "
             else
                 main_overrides="\
@@ -121,6 +131,7 @@ for model in "${!MODELS[@]}"; do
                     initial_condition.start_indices.times=[$MAIN_INITIAL_CONDITION_TIME] \
                     n_forward_steps=$MAIN_N_FORWARD_STEPS \
                     data_writer.files=[] \
+                    seed=$seed \
                 "
             fi
 
@@ -129,14 +140,13 @@ for model in "${!MODELS[@]}"; do
 
             gantry run \
                 --remote https://github.com/ai2cm/ace \
-                --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+                --ref $ACE_COMMIT \
                 --name $job_name \
                 --description 'Run inference with ACE' \
                 --beaker-image "${BEAKER_IMAGE}" \
-                --workspace ai2/climate-titan \
-                --priority urgent \
-                --preemptible \
-                --cluster ai2/titan \
+                --workspace ai2/ace \
+                --priority high \
+                --cluster ai2/jupiter \
                 --env WANDB_USERNAME=$WANDB_USERNAME \
                 --env WANDB_NAME=$job_name \
                 --env WANDB_JOB_TYPE=inference \
@@ -147,6 +157,7 @@ for model in "${!MODELS[@]}"; do
                 --dataset $dataset_id:training_checkpoints/best_inference_ckpt.tar:/ckpt.tar \
                 --gpus 1 \
                 --shared-memory 20GiB \
+                --min-runtime 0 \
                 --weka climate-default:/climate-default \
                 --system-python \
                 --install "pip install --no-deps ." \

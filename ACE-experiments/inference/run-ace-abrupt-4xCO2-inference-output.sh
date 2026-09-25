@@ -3,11 +3,13 @@
 set -e
 
 DATE=2026-09-09
-CONFIG_FILENAME="ace-abrupt-4xCO2-evaluator-config.yaml"
+CONFIG_FILENAME="ace-abrupt-4xCO2-ensemble-inference-output-config.yaml"
 BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
 ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
+CONFIG_PATH_1xCO2=$SCRIPT_PATH/$CONFIG_FILENAME_1xCO2
+
 SET_SEED=$SCRIPT_PATH/set_seed.py
 WANDB_USERNAME=spencerc_ai2
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -17,35 +19,40 @@ CHECKPOINT_PATH=training_checkpoints/best_inference_ckpt.tar
 cd $REPO_ROOT  # so config path is valid no matter where we are running this script
 
 CONFIG_B64=$(base64 < "$CONFIG_PATH" | tr -d '\n')
+CONFIG_B64_1xCO2=$(base64 < "$CONFIG_PATH_1xCO2" | tr -d '\n')
+
+GCS_ROOT="gs://vcm-ml-experiments/spencerc/${DATE}-abrupt-4xCO2-ensemble-inference"
 
 declare -A MODELS=( \
-    [published-baseline-rs3]="01J4BR6J5AW32ZDQ77VZ60P4KT" \
-    [no-random-co2-rs0]="01KHGDAMB2BDZQS8JFF65A2YDR" \
+    # [published-baseline-rs3]="01J4BR6J5AW32ZDQ77VZ60P4KT" \
+    # [no-random-co2-rs0]="01KHGDAMB2BDZQS8JFF65A2YDR" \
     [no-random-co2-rs1]="01KH4SDCYN1NF2RP2JXZS0WZ1Y" \
-    [no-random-co2-energy-conserving-rs0]="01KHGDA8TVGP9JKWVJ1N0SMHCN" \
+    # [no-random-co2-energy-conserving-rs0]="01KHGDA8TVGP9JKWVJ1N0SMHCN" \
     [no-random-co2-energy-conserving-rs1]="01KH4SDT1Q5246GZ307W8AW4M3" \
     [full-rs0]="01KHKJ02SQM8S8T4B6030F94CV" \
-    [full-rs1]="01KHJ5EQ04XTFG46QCKX3TTAHF" \
-    [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
+    # [full-rs1]="01KHJ5EQ04XTFG46QCKX3TTAHF" \
+    # [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
     [full-energy-conserving-rs1]="01KHCXABVNA3TJW0ZT5F4YDDQT" \
-    [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
+    # [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
     [baseline-like-full-rs1]="01M235Y7DSCW4TPKTX7S305QYD" \
 )
 
 for name in "${!MODELS[@]}"; do
-    python -m fme.ace.validate_config --config_type evaluator $CONFIG_PATH
-    job_name="${DATE}-${name}-abrupt-4xCO2-evaluator"
-    seed=$(python $SET_SEED $job_name)
-    override="seed=$seed"
+    python -m fme.ace.validate_config --config_type inference $CONFIG_PATH
+    job_name="${DATE}-${name}-abrupt-4xCO2-ensemble-inference-energy-budget-residual-output"
+    reference_job_name="${DATE}-${name}-abrupt-4xCO2-ensemble-evaluator"  # Use same seed as basic abrupt 4xCO2 jobs
+    seed=$(python $SET_SEED $reference_job_name)
+    experiment_dir=$GCS_ROOT/$name
+    override="seed=$seed experiment_dir=$experiment_dir"
     existing_results_dataset=${MODELS[$name]}
     gantry run \
         --remote https://github.com/ai2cm/ace \
         --ref $ACE_COMMIT \
         --name $job_name \
-        --description 'Run ACE abrupt 4xCO2 evaluator' \
+        --description 'Run ACE abrupt 4xCO2 ensemble evaluator' \
         --beaker-image "${BEAKER_IMAGE}" \
         --workspace ai2/ace \
-        --priority high \
+        --priority urgent \
         --cluster ai2/titan \
         --env WANDB_USERNAME=$WANDB_USERNAME \
         --env WANDB_NAME=$job_name \
@@ -57,13 +64,13 @@ for name in "${!MODELS[@]}"; do
         --dataset $existing_results_dataset:$CHECKPOINT_PATH:/ckpt.tar \
         --gpus 1 \
         --shared-memory 20GiB \
-        --min-runtime 1h \
+        --min-runtime 30min \
         --weka climate-default:/climate-default \
         --system-python \
         --install "pip install --no-deps ." \
         -- bash -c "\
             echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml \
             && \
-            python -I -m fme.ace.evaluator /tmp/config.yaml --override $override \
+            python -I -m fme.ace.inference /tmp/config.yaml --override $override \
         "
 done
