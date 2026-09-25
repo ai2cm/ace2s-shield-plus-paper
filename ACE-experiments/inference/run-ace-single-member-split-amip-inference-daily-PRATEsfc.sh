@@ -2,20 +2,27 @@
 
 set -e
 
+DATE=2026-09-09
 WANDB_USERNAME=spencerc_ai2
 CONFIG_FILENAME="ace-amip-inference-config-daily-PRATEsfc.yaml"
-BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
+SET_SEED=$SCRIPT_PATH/set_seed.py
 
 ENSEMBLE_ID="ic_0002"
 AMIP_DATA_ROOT="/climate-default/2026-01-28-vertically-resolved-c96-1deg-shield-amip-ensemble-dataset"
 
 declare -A MODELS=( \
-    [published-baseline-rs3]="01J4BR6J5AW32ZDQ77VZ60P4KT" \
-    ["ACE2-SHiELD"]="brianhenn/shield-amip-1deg-ace2-train-RS2-best-inference-ckpt" \
-    [no-random-co2-energy-conserving-rs0]="01KHGDA8TVGP9JKWVJ1N0SMHCN" \
-    [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
+    # [published-baseline-rs3]="01J4BR6J5AW32ZDQ77VZ60P4KT" \
+    # ["ACE2-SHiELD"]="brianhenn/shield-amip-1deg-ace2-train-RS2-best-inference-ckpt" \
+    # [no-random-co2-energy-conserving-rs0]="01KHGDA8TVGP9JKWVJ1N0SMHCN" \
+    [no-random-co2-energy-conserving-rs1]="01KH4SDT1Q5246GZ307W8AW4M3" \
+    [full-energy-conserving-rs1]="01KHCXABVNA3TJW0ZT5F4YDDQT" \
+    # [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
+    # [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
+    [baseline-like-full-rs1]="01M235Y7DSCW4TPKTX7S305QYD" \
 )
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -23,7 +30,7 @@ cd $REPO_ROOT  # so config path is valid no matter where we are running this scr
 
 CONFIG_B64=$(base64 < "$CONFIG_PATH" | tr -d '\n')
 
-GCS_ROOT="gs://vcm-ml-experiments/spencerc/2026-04-25-amip-inference"
+GCS_ROOT="gs://vcm-ml-experiments/spencerc/${DATE}-amip-inference"
 
 SPIN_UP_EXPERIMENT_DIR="/results/spin-up"
 TRAIN_AND_VALIDATE_EXPERIMENT_DIR="/results/train-and-validate"
@@ -51,7 +58,8 @@ for model in "${!MODELS[@]}"; do
         interpolate=true
     fi
 
-    job_name=$model-split-amip-daily-PRATEsfc
+    job_name=$DATE-$model-split-amip-daily-PRATEsfc
+    seed=$(python $SET_SEED $job_name)
     spin_up_overrides="\
         experiment_dir=$SPIN_UP_EXPERIMENT_DIR \
         forcing_loader.dataset.data_path=$AMIP_DATA_ROOT \
@@ -67,6 +75,7 @@ for model in "${!MODELS[@]}"; do
         stepper_override.ocean.ocean_fraction_name=ocean_fraction \
         stepper_override.ocean.interpolate=$interpolate \
         stepper_override.ocean.slab=null \
+        seed=$seed \
     "
     train_and_validate_overrides="\
         experiment_dir=$TRAIN_AND_VALIDATE_EXPERIMENT_DIR \
@@ -82,6 +91,7 @@ for model in "${!MODELS[@]}"; do
         stepper_override.ocean.ocean_fraction_name=ocean_fraction \
         stepper_override.ocean.interpolate=$interpolate \
         stepper_override.ocean.slab=null \
+        seed=$seed \
     "
     test_overrides="\
         experiment_dir=$test_experiment_dir \
@@ -96,6 +106,7 @@ for model in "${!MODELS[@]}"; do
         stepper_override.ocean.ocean_fraction_name=ocean_fraction \
         stepper_override.ocean.interpolate=$interpolate \
         stepper_override.ocean.slab=null \
+        seed=$seed \
     "
 
     python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $spin_up_overrides
@@ -104,14 +115,13 @@ for model in "${!MODELS[@]}"; do
 
     gantry run \
         --remote https://github.com/ai2cm/ace \
-        --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+        --ref $ACE_COMMIT \
         --name $job_name \
         --description 'Run inference with ACE' \
         --beaker-image "${BEAKER_IMAGE}" \
-        --workspace ai2/climate-titan \
+        --workspace ai2/ace \
         --priority urgent \
-        --preemptible \
-        --cluster ai2/titan \
+        --cluster ai2/jupiter \
         --env WANDB_USERNAME=$WANDB_USERNAME \
         --env WANDB_NAME=$job_name \
         --env WANDB_JOB_TYPE=inference \
@@ -122,6 +132,7 @@ for model in "${!MODELS[@]}"; do
         --dataset $dataset_id:training_checkpoints/best_inference_ckpt.tar:/ckpt.tar \
         --gpus 1 \
         --shared-memory 20GiB \
+        --min-runtime 5h \
         --weka climate-default:/climate-default \
         --system-python \
         --install "pip install --no-deps ." \

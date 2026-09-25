@@ -4,10 +4,13 @@ set -e
 
 ENSEMBLE_ID="AMIP-constant-CO2"
 
+DATE=2026-09-09
 CONFIG_FILENAME="ace-amip-inference-config.yaml"
-BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
+SET_SEED=$SCRIPT_PATH/set_seed.py
  # since we use a service account API key for wandb, we use the beaker username to set the wandb username
 WANDB_USERNAME=spencerc_ai2
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -29,6 +32,8 @@ declare -A MODELS=( \
     [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
     [full-energy-conserving-rs1]="01KHCXABVNA3TJW0ZT5F4YDDQT" \
     ["ACE2-SHiELD"]="brianhenn/shield-amip-1deg-ace2-train-RS2-best-inference-ckpt" \
+    [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
+    [baseline-like-full-rs1]="01M235Y7DSCW4TPKTX7S305QYD" \
 )
 
 SPIN_UP_EXPERIMENT_DIR="/results/spin-up"
@@ -38,7 +43,8 @@ MAIN_N_FORWARD_STEPS=59904
 AMIP_CONSTANT_CO2_DATA_ROOT="/climate-default/2025-12-17-vertically-resolved-c96-1deg-shield-amip-constant-co2-data"
 
 for name in "${!MODELS[@]}"; do
-    job_name="${name}-amip-constant-CO2-inference"
+    job_name="${DATE}-${name}-amip-constant-CO2-inference"
+    seed=$(python $SET_SEED $job_name)
     existing_results_dataset=${MODELS[$name]}
 
     spin_up_override="\
@@ -54,6 +60,7 @@ for name in "${!MODELS[@]}"; do
         stepper_override.ocean.ocean_fraction_name=ocean_fraction \
         stepper_override.ocean.interpolate=true \
         stepper_override.ocean.slab=null \
+        seed=$seed \
     "
     python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $spin_up_override
     main_override="\
@@ -68,18 +75,18 @@ for name in "${!MODELS[@]}"; do
         stepper_override.ocean.ocean_fraction_name=ocean_fraction \
         stepper_override.ocean.interpolate=true \
         stepper_override.ocean.slab=null \
+        seed=$seed \
     "
     python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $main_override
 
     gantry run \
         --remote https://github.com/ai2cm/ace \
-        --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+        --ref $ACE_COMMIT \
         --name $job_name \
         --description 'Run ACE AMIP constant CO2 inference' \
         --beaker-image "${BEAKER_IMAGE}" \
-        --workspace ai2/climate-titan \
-        --priority urgent \
-        --preemptible \
+        --workspace ai2/ace \
+        --priority high \
         --cluster ai2/titan \
         --env WANDB_USERNAME=$WANDB_USERNAME \
         --env WANDB_NAME=$job_name \
@@ -91,6 +98,7 @@ for name in "${!MODELS[@]}"; do
         --dataset $existing_results_dataset:$CHECKPOINT_PATH:/ckpt.tar \
         --gpus 1 \
         --shared-memory 20GiB \
+        --min-runtime 5h \
         --weka climate-default:/climate-default \
         --system-python \
         --install "pip install --no-deps ." \

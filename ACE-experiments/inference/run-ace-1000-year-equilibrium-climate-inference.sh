@@ -4,6 +4,8 @@ set -e
 
 WANDB_USERNAME=spencerc_ai2
 CONFIG_FILENAME="ace-som-1000-year-inference-config.yaml"
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 BEAKER_IMAGE=elynn/fme-deps-only-769435616
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
@@ -28,15 +30,9 @@ CO2_CONCENTRATIONS=( \
 )
 
 declare -A MODELS=( \
-    [published-baseline-rs3]="01J4BR6J5AW32ZDQ77VZ60P4KT" \
     [no-random-co2-rs0]="01KHGDAMB2BDZQS8JFF65A2YDR" \
-    [no-random-co2-rs1]="01KH4SDCYN1NF2RP2JXZS0WZ1Y" \
     [no-random-co2-energy-conserving-rs0]="01KHGDA8TVGP9JKWVJ1N0SMHCN" \
-    [no-random-co2-energy-conserving-rs1]="01KH4SDT1Q5246GZ307W8AW4M3" \
-    [full-rs0]="01KHKJ02SQM8S8T4B6030F94CV" \
-    [full-rs1]="01KHJ5EQ04XTFG46QCKX3TTAHF" \
     [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
-    [full-energy-conserving-rs1]="01KHCXABVNA3TJW0ZT5F4YDDQT" \
 )
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -48,43 +44,50 @@ for model in "${!MODELS[@]}"; do
     dataset_id="${MODELS[$model]}"
 
     for climate in "${!INITIAL_CONDITION_DATASETS[@]}"; do
-        co2_concentration=${CO2_CONCENTRATIONS[$climate]}
-        initial_condition_path="${INITIAL_CONDITION_DATASETS[$climate]}"
-        override="\
-            forcing_loader.dataset.overwrite.constant.global_mean_co2=$co2_concentration \
-            initial_condition.path=$initial_condition_path \
-            initial_condition.start_indices.times=[$INITIAL_CONDITION_TIME] \
-        "
-        python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $override
+        if [[ "$model" ==  "full-energy-conserving-rs0" || "$climate" == "4xCO2" ]]; then
+            n_members=6
+            for ensemble_member in $(seq 0 $((n_members - 1))); do
+                seed=$ensemble_member
+                co2_concentration=${CO2_CONCENTRATIONS[$climate]}
+                initial_condition_path="${INITIAL_CONDITION_DATASETS[$climate]}"
+                override="\
+                    forcing_loader.dataset.overwrite.constant.global_mean_co2=$co2_concentration \
+                    initial_condition.path=$initial_condition_path \
+                    initial_condition.start_indices.times=[$INITIAL_CONDITION_TIME] \
+                    seed=$seed \
+                "
+                python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $override
 
-        job_name="${model}-${climate}-1000-year-equilibrium-climate-inference"
-        gantry run \
-            --remote https://github.com/ai2cm/ace \
-            --ref 83168ce7ccabffc885316f3b643002b775ff5914 \
-            --name $job_name \
-            --description 'Run inference with ACE' \
-            --beaker-image "${BEAKER_IMAGE}" \
-            --workspace ai2/climate-titan \
-            --priority urgent \
-            --preemptible \
-            --cluster ai2/titan \
-            --env WANDB_USERNAME=$WANDB_USERNAME \
-            --env WANDB_NAME=$job_name \
-            --env WANDB_JOB_TYPE=inference \
-            --env WANDB_RUN_GROUP= \
-            --env GOOGLE_APPLICATION_CREDENTIALS=/tmp/google_application_credentials.json \
-            --env-secret WANDB_API_KEY=wandb-api-key-ai2cm-sa \
-            --dataset-secret google-credentials:/tmp/google_application_credentials.json \
-            --dataset $dataset_id:training_checkpoints/best_inference_ckpt.tar:/ckpt.tar \
-            --gpus 1 \
-            --shared-memory 20GiB \
-            --weka climate-default:/climate-default \
-            --system-python \
-            --install "pip install --no-deps ." \
-            -- bash -c "\
-                echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml \
-                && \
-                python -I -m fme.ace.inference /tmp/config.yaml --override $override \
-            "
+                job_name="${model}-${climate}-1000-year-equilibrium-climate-inference-seed-${seed}"
+                gantry run \
+                    --remote https://github.com/ai2cm/ace \
+                    --ref $ACE_COMMIT \
+                    --name $job_name \
+                    --description 'Run inference with ACE' \
+                    --beaker-image "${BEAKER_IMAGE}" \
+                    --workspace ai2/climate-titan \
+                    --priority urgent \
+                    --preemptible \
+                    --cluster ai2/titan \
+                    --env WANDB_USERNAME=$WANDB_USERNAME \
+                    --env WANDB_NAME=$job_name \
+                    --env WANDB_JOB_TYPE=inference \
+                    --env WANDB_RUN_GROUP= \
+                    --env GOOGLE_APPLICATION_CREDENTIALS=/tmp/google_application_credentials.json \
+                    --env-secret WANDB_API_KEY=wandb-api-key-ai2cm-sa \
+                    --dataset-secret google-credentials:/tmp/google_application_credentials.json \
+                    --dataset $dataset_id:training_checkpoints/best_inference_ckpt.tar:/ckpt.tar \
+                    --gpus 1 \
+                    --shared-memory 20GiB \
+                    --weka climate-default:/climate-default \
+                    --system-python \
+                    --install "pip install --no-deps ." \
+                    -- bash -c "\
+                        echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml \
+                        && \
+                        python -I -m fme.ace.inference /tmp/config.yaml --override $override \
+                    "
+            fi
+        done
     done
 done

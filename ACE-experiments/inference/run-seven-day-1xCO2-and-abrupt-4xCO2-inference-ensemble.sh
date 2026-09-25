@@ -2,10 +2,13 @@
 
 set -e
 
+DATE=2026-09-09
 CONFIG_FILENAME="ace-1xCO2-ensemble-inference-config.yaml"
-BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
+SET_SEED=$SCRIPT_PATH/set_seed.py
 WANDB_USERNAME=spencerc_ai2
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
@@ -25,23 +28,25 @@ declare -A MODELS=( \
     [full-rs1]="01KHJ5EQ04XTFG46QCKX3TTAHF" \
     [full-energy-conserving-rs0]="01KHJ5F1M6YKVZESPZAAVVD6G8" \
     [full-energy-conserving-rs1]="01KHCXABVNA3TJW0ZT5F4YDDQT" \
+    [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
+    [baseline-like-full-rs1]="01M235Y7DSCW4TPKTX7S305QYD" \
 )
 
-OVERRIDE="n_forward_steps=28"
 for name in "${!MODELS[@]}"; do
-    python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $OVERRIDE
-    job_name="${name}-seven-day-1xCO2-ensemble-inference"
+    job_name="${DATE}-${name}-seven-day-1xCO2-ensemble-inference"
+    seed=$(python $SET_SEED $job_name)
+    override="n_forward_steps=28 seed=$seed"
     existing_results_dataset=${MODELS[$name]}
+    python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $override
     gantry run \
         --remote https://github.com/ai2cm/ace \
-        --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+        --ref $ACE_COMMIT \
         --name $job_name \
         --description 'Run seven-day ACE 1xCO2 ensemble inference' \
         --beaker-image "${BEAKER_IMAGE}" \
-        --workspace ai2/climate-titan \
-        --priority urgent \
-        --preemptible \
-        --cluster ai2/titan \
+        --workspace ai2/ace \
+        --priority high \
+        --cluster ai2/jupiter \
         --env WANDB_USERNAME=$WANDB_USERNAME \
         --env WANDB_NAME=$job_name \
         --env WANDB_JOB_TYPE=inference \
@@ -52,31 +57,32 @@ for name in "${!MODELS[@]}"; do
         --dataset $existing_results_dataset:$CHECKPOINT_PATH:/ckpt.tar \
         --gpus 1 \
         --shared-memory 20GiB \
+        --min-runtime 0 \
         --weka climate-default:/climate-default \
         --system-python \
         --install "pip install --no-deps ." \
         -- bash -c "\
             echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml \
             && \
-            python -I -m fme.ace.inference /tmp/config.yaml --override $OVERRIDE \
+            python -I -m fme.ace.inference /tmp/config.yaml --override $override \
         "
 done
 
-OVERRIDE="n_forward_steps=28 forcing_loader.dataset.overwrite.constant.global_mean_co2=0.0014537"  # Abrupt 4xCO2
 for name in "${!MODELS[@]}"; do
-    python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $OVERRIDE
-    job_name="${name}-seven-day-abrupt-4xCO2-ensemble-inference"
+    job_name="${DATE}-${name}-seven-day-abrupt-4xCO2-ensemble-inference"
+    seed=$(python $SET_SEED $job_name)
+    override="n_forward_steps=28 seed=$seed forcing_loader.dataset.overwrite.constant.global_mean_co2=0.0014537"  # Abrupt 4xCO2
     existing_results_dataset=${MODELS[$name]}
+    python -m fme.ace.validate_config --config_type inference $CONFIG_PATH --override $override
     gantry run \
         --remote https://github.com/ai2cm/ace \
-        --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+        --ref $ACE_COMMIT \
         --name $job_name \
         --description 'Run seven-day ACE abrupt 4xCO2 ensemble inference' \
         --beaker-image "${BEAKER_IMAGE}" \
-        --workspace ai2/climate-titan \
-        --priority urgent \
-        --preemptible \
-        --cluster ai2/titan \
+        --workspace ai2/ace \
+        --priority high \
+        --cluster ai2/jupiter \
         --env WANDB_USERNAME=$WANDB_USERNAME \
         --env WANDB_NAME=$job_name \
         --env WANDB_JOB_TYPE=inference \
@@ -87,12 +93,13 @@ for name in "${!MODELS[@]}"; do
         --dataset $existing_results_dataset:$CHECKPOINT_PATH:/ckpt.tar \
         --gpus 1 \
         --shared-memory 20GiB \
+        --min-runtime 0 \
         --weka climate-default:/climate-default \
         --system-python \
         --install "pip install --no-deps ." \
         -- bash -c "\
             echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml \
             && \
-            python -I -m fme.ace.inference /tmp/config.yaml --override $OVERRIDE \
+            python -I -m fme.ace.inference /tmp/config.yaml --override $override \
         "
 done

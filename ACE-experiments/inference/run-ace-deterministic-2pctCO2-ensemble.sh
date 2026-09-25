@@ -2,9 +2,11 @@
 
 set -e
 
+DATE=2026-09-01
 WANDB_USERNAME=spencerc_ai2
 CONFIG_FILENAME="ace-som-2pctCO2-inference-config.yaml"
-BEAKER_IMAGE=jeremym/fme-deps-only-5039277ac
+BEAKER_IMAGE=oliverwm/fme-deps-only-54045d546
+ACE_COMMIT=56820c0eb856d2948e20fb696f96eb53d0a43098
 SCRIPT_PATH=$(git rev-parse --show-prefix)  # relative to the root of the repository
 CONFIG_PATH=$SCRIPT_PATH/$CONFIG_FILENAME
 
@@ -19,7 +21,9 @@ INITIAL_CONDITIONS=( \
 )
 
 declare -A MODELS=( \
-    [published-baseline-rs3]="01J4BR6J5AW32ZDQ77VZ60P4KT" \
+    # [published-baseline-rs3]="01J4BR6J5AW32ZDQ77VZ60P4KT" \
+    # [baseline-like-full-rs0]="01M17655EQD9BVRB9MY4T7S6EY" \
+    [baseline-like-full-rs1]="01M235Y7DSCW4TPKTX7S305QYD" \
 )
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -45,7 +49,7 @@ for model in "${!MODELS[@]}"; do
         spin_up_n_forward_steps="$((SPIN_UP_MAXIMUM_N_FORWARD_STEPS - initial_condition + 1))"
         spin_up_log_to_wandb=false  # Disable logging to wandb in spin up case.
 
-        job_name=$model-2pctCO2-inference-ic$initial_condition
+        job_name=$DATE-$model-2pctCO2-inference-ic$initial_condition
         spin_up_overrides="\
             experiment_dir=$SPIN_UP_EXPERIMENT_DIR \
             forcing_loader.dataset.data_path=$SPIN_UP_FORCING_ROOT \
@@ -69,14 +73,13 @@ for model in "${!MODELS[@]}"; do
 
         gantry run \
             --remote https://github.com/ai2cm/ace \
-            --ref 4ca6589b5189e82b89ea3c500862871a703d0ded \
+            --ref $ACE_COMMIT \
             --name $job_name \
             --description 'Run inference with ACE' \
             --beaker-image "${BEAKER_IMAGE}" \
-            --workspace ai2/climate-titan \
-            --priority urgent \
-            --preemptible \
-            --cluster ai2/titan \
+            --workspace ai2/ace \
+            --priority high \
+            --cluster ai2/jupiter \
             --env WANDB_USERNAME=$WANDB_USERNAME \
             --env WANDB_NAME=$job_name \
             --env WANDB_JOB_TYPE=inference \
@@ -87,6 +90,7 @@ for model in "${!MODELS[@]}"; do
             --dataset $dataset_id:training_checkpoints/best_inference_ckpt.tar:/ckpt.tar \
             --gpus 1 \
             --shared-memory 20GiB \
+            --min-runtime 0 \
             --weka climate-default:/climate-default \
             --system-python \
             --install "pip install --no-deps ." \
